@@ -1,0 +1,1 @@
+gcc -Wall -Wextra -Werror -pedantic main.c -Ic:\mingw_dev\SDL2\include -Lc:\mingw_dev\SDL2\lib -lmingw32 -lSDL2main -lSDL2 -o main.exe
