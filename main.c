@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <SDL2/SDL.h>
 
 #define SCREEN_WIDTH 1000
@@ -7,105 +9,95 @@
 #define GRID_SIZE 7
 #define INC 0.55
 
-void ToIso(float ***, int **);
-float ***get_grid(float *);
+void draw_vertical(float ***grid, SDL_Renderer *my_renderer);
+void draw_horizontal(float ***grid, SDL_Renderer *my_renderer);
+int **get_altitude(FILE *altitude_file);
+float ***get_grid(float *origin);
+void ToIso(float ***my_grid, int **altitude);
+void free_3D(float ***cube);
+void free_2D(int **table);
 
-
-
-int main(int argc __attribute__((unused)), char *argv[] __attribute__((unused)))
+int main(int argc, char *argv[])
 {
 	SDL_Window *my_window = NULL;
 	SDL_Renderer *my_renderer = NULL;
 	SDL_Event event;
 	int EXIT = 0;
-	int i, j;
 	float origin[2] = {750.0, -150.0};
 	int **altitude = NULL;
 	float ***grid = NULL;
-	float initial[2] = {0, 0};
-	float dest[2] = {0, 0};
-
-
-	altitude = malloc(sizeof(*altitude) * (GRID_SIZE + 1));
-	for(i=0; i <= GRID_SIZE; i++) 
-	{
-		altitude[i]= malloc(sizeof(**altitude) * (GRID_SIZE + 1));
-	}
-	for (i = 0; i <= GRID_SIZE; i++)
-	{
-		for (j = 0; j <= GRID_SIZE; j++)
-		{
-			altitude[i][j] = 0;
-		}
-	}
-
-	if (SDL_Init(SDL_INIT_VIDEO) < 0)
-		fprintf(stderr, "SDL Error: %s\n", SDL_GetError());
-	else
-	{
-		my_window = SDL_CreateWindow("Isometric Grid", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
-		if (my_window == NULL)
-			fprintf(stderr, "SDL Error: %s\n", SDL_GetError());
-		else
-		{
-			my_renderer = SDL_CreateRenderer(my_window, -1, SDL_RENDERER_ACCELERATED);
-
-			grid = get_grid(origin);
-			ToIso(grid, altitude);			
-			while (!EXIT)
-			{
-				//clear screen
-				SDL_SetRenderDrawColor(my_renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
-				SDL_RenderClear(my_renderer);
-
-				SDL_SetRenderDrawColor(my_renderer, 0, 255, 0, SDL_ALPHA_OPAQUE);
-
-				for(i = 0; i <= GRID_SIZE; i++) 
-				{
-					for(j = 0; j < GRID_SIZE; j++) 
-					{
-						initial[0] = grid[i][j][0];
-						initial[1] = grid[i][j][1];
-						dest[0] = grid[i][j + 1][0];
-						dest[1] = grid[i][j + 1][1];
-						SDL_RenderDrawLine(my_renderer, initial[0], initial[1], dest[0], dest[1]);
-						// SDL_RenderDrawPoint(my_renderer, grid[i][j][0], grid[i][j][1]);
-					}
-				}
-
-				for(i = 0; i <= GRID_SIZE; i++) 
-				{
-					for(j = 0; j < GRID_SIZE; j++) 
-					{
-						initial[0] = grid[j][i][0];
-						initial[1] = grid[j][i][1];
-						dest[0] = grid[j + 1][i][0];
-						dest[1] = grid[j + 1][i][1];
-						SDL_RenderDrawLine(my_renderer, initial[0], initial[1], dest[0], dest[1]);
-						// SDL_RenderDrawPoint(my_renderer, grid[i][j][0], grid[i][j][1]);
-					}
-				}
+	FILE *altitude_file = NULL;
 	
-				SDL_RenderPresent(my_renderer);
-				SDL_Delay(20);
-				// free(grid);
-				// origin[0] += 1;
-				// // origin[1] += 1;
-				while (SDL_PollEvent(&event))
-				{
-					if (event.type == SDL_QUIT)
-						EXIT = 1;
-				}
-			}
+	if (argc != 2)
+	{
+		fprintf(stderr, "USAGE: ./terrain <file>\n");
+		exit(EXIT_FAILURE);
+	}
+	if (SDL_Init(SDL_INIT_VIDEO) < 0) /*Initialize SDL*/
+	{
+		fprintf(stderr, "SDL Error: %s\n", SDL_GetError());
+		exit(EXIT_FAILURE);
+	}
+	my_window = SDL_CreateWindow("Isometric Grid", 50, 50, SCREEN_WIDTH, SCREEN_HEIGHT, 0); /*Create window*/
+	if (my_window == NULL)
+	{
+		fprintf(stderr, "SDL Error: %s\n", SDL_GetError());
+		SDL_Quit();
+		exit(EXIT_FAILURE);
+	}
+	my_renderer = SDL_CreateRenderer(my_window, -1, SDL_RENDERER_ACCELERATED);
+	altitude_file = fopen(argv[1], "r");
+	grid = get_grid(origin); /*setup grid*/
+	altitude = get_altitude(altitude_file);
+	fclose(altitude_file);
+	ToIso(grid, altitude);	
+	while (!EXIT)
+	{
+		SDL_SetRenderDrawColor(my_renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+		SDL_RenderClear(my_renderer); /*clear screen*/
+		SDL_SetRenderDrawColor(my_renderer, 0, 255, 0, SDL_ALPHA_OPAQUE);
+		draw_horizontal(grid, my_renderer);
+		draw_vertical(grid, my_renderer);
+		SDL_RenderPresent(my_renderer);
+		while (SDL_PollEvent(&event))
+		{
+			if (event.type == SDL_QUIT)
+				EXIT = 1;
 		}
 	}
-	free(grid);
+	free_3D(grid);
+	free_2D(altitude);
 	SDL_DestroyWindow(my_window);
 	SDL_DestroyRenderer(my_renderer);
 	SDL_Quit();
 	return (0);
 }
 
+void free_2D(int **table)
+{
+	int i;
+
+	for (i = 0; i <= GRID_SIZE; i++)
+	{
+		free(table[i]);
+	}
+	free(table);
+}
+
+void free_3D(float ***cube)
+{
+	int i, j;
+
+	for (i = 0; i <= GRID_SIZE; i++)
+	{
+		for (j = 0; j <= GRID_SIZE; j++)
+		{
+			free(cube[i][j]);
+		}
+		free(cube[i]);
+	}
+	free(cube);
+}
 
 void ToIso(float ***my_grid, int **altitude)
 {
@@ -146,4 +138,71 @@ float ***get_grid(float *origin)
 		}
 	}
 	return (my_grid);
+}
+
+int **get_altitude(FILE *altitude_file)
+{
+	int **grid = NULL;
+	int i, j;
+	char line[256];
+	char *token = NULL;
+
+	grid = malloc(sizeof(*grid) * (GRID_SIZE + 1));
+	for (i = 0; i <= GRID_SIZE; i++)
+	{
+		grid[i] = malloc(sizeof(**grid) * (GRID_SIZE + 1));
+	}
+	
+	i = 0;
+	while (fgets(line, sizeof(line), altitude_file))
+	{
+		j = 0;
+		token = strtok(line, " ");
+		while (token != NULL)
+		{
+			grid[i][j] = atoi(token);
+			token = strtok(NULL, " ");
+			j++;
+		}
+		i++;
+	}
+	return (grid);
+}
+
+void draw_horizontal(float ***grid, SDL_Renderer *my_renderer)
+{
+	float initial[2] = {0, 0};
+	float dest[2] = {0, 0};
+	int i, j;
+
+	for(i = 0; i <= GRID_SIZE; i++) 
+	{
+		for(j = 0; j < GRID_SIZE; j++) 
+		{
+			initial[0] = grid[i][j][0];
+			initial[1] = grid[i][j][1];
+			dest[0] = grid[i][j + 1][0];
+			dest[1] = grid[i][j + 1][1];
+			SDL_RenderDrawLine(my_renderer, initial[0], initial[1], dest[0], dest[1]);
+		}
+	}
+}
+
+void draw_vertical(float ***grid, SDL_Renderer *my_renderer)
+{
+	float initial[2] = {0, 0};
+	float dest[2] = {0, 0};
+	int i, j;
+
+	for(i = 0; i <= GRID_SIZE; i++) 
+	{
+		for(j = 0; j < GRID_SIZE; j++) 
+		{
+			initial[0] = grid[j][i][0];
+			initial[1] = grid[j][i][1];
+			dest[0] = grid[j + 1][i][0];
+			dest[1] = grid[j + 1][i][1];
+			SDL_RenderDrawLine(my_renderer, initial[0], initial[1], dest[0], dest[1]);
+		}
+	}
 }
