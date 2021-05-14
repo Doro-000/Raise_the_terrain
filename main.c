@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
 		while (SDL_PollEvent(&event))
 		{
 			if (event.type == SDL_QUIT)
-				EXIT = 1;
+				EXIT = 1;			
 			else if (event.type == SDL_KEYDOWN)
 			{
 				switch (event.key.keysym.sym)
@@ -53,6 +53,9 @@ int main(int argc, char *argv[])
 						break;
 					case SDLK_RIGHT:
 						apply_rotation(grid, -1 * angle);
+						break;
+					case SDLK_ESCAPE:
+						EXIT = 1;
 						break;
 					default:
 						break;
