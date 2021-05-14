@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
 		{
 			if (event.type == SDL_QUIT)
 				EXIT = 1;
-			else if(event.type == SDL_KEYDOWN)
+			else if (event.type == SDL_KEYDOWN)
 			{
 				switch (event.key.keysym.sym)
 				{
