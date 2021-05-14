@@ -10,23 +10,23 @@
  */
 void ToIso(float ***my_grid, int **altitude)
 {
-	float *temp_point;
+	float *temp;
 	int Z, i, j;
 
-	for(i = 0; i <= GRID_SIZE; i++) 
+	for (i = 0; i <= GRID_SIZE; i++)
 	{
-		for(j = 0; j <= GRID_SIZE; j++) 
+		for (j = 0; j <= GRID_SIZE; j++)
 		{
-			temp_point = my_grid[i][j];
-			my_grid[i][j][0] = (temp_point[0] * INC) - (temp_point[1] * INC);
+			temp = my_grid[i][j];
+			my_grid[i][j][0] = (temp[0] * INC) - (temp[1] * INC);
 			Z = altitude[i][j];
-			my_grid[i][j][1] = ((1 - INC) * temp_point[0]) + ((1 - INC) * temp_point[1]) - Z;
+			my_grid[i][j][1] = ((1 - INC) * temp[0]) + ((1 - INC) * temp[1]) - Z;
 		}
 	}
 }
 
 /**
- * get_grid: generates a set of points given an initial point
+ * get_grid - generates a set of points given an initial point
  * @origin: initial point
  *
  * Return: a 3d array containing the generated points
@@ -37,16 +37,16 @@ float ***get_grid(float *origin)
 	float ***my_grid = NULL;
 
 	my_grid = malloc(sizeof(*my_grid) * (GRID_SIZE + 1));
-	for(i=0; i <= GRID_SIZE; i++) 
+	for (i = 0; i <= GRID_SIZE; i++)
 	{
-		my_grid[i]= malloc(sizeof(**my_grid) * (GRID_SIZE + 1));
-		for(j=0; j <= GRID_SIZE; j++) 
-			my_grid[i][j]= malloc(sizeof(***my_grid) * 2);
+		my_grid[i] = malloc(sizeof(**my_grid) * (GRID_SIZE + 1));
+		for (j = 0; j <= GRID_SIZE; j++)
+			my_grid[i][j] = malloc(sizeof(***my_grid) * 2);
 	}
 
-	for(i = 0; i <= GRID_SIZE; i++) 
+	for (i = 0; i <= GRID_SIZE; i++)
 	{
-		for(j = 0; j <= GRID_SIZE; j++) 
+		for (j = 0; j <= GRID_SIZE; j++)
 		{
 			my_grid[i][j][0] = origin[0] + (j * GRID_SPACING);
 			my_grid[i][j][1] = origin[1] + (i * GRID_SPACING);
@@ -56,7 +56,7 @@ float ***get_grid(float *origin)
 }
 
 /**
- * get_altitude: scans a file to Z coordinates
+ * get_altitude - scans a file to Z coordinates
  * @altitude_file: file stream to be used
  *
  * Return: a 2d array containing the read coordinates
@@ -73,7 +73,6 @@ int **get_altitude(FILE *altitude_file)
 	{
 		grid[i] = malloc(sizeof(**grid) * (GRID_SIZE + 1));
 	}
-	
 	i = 0;
 	while (fgets(line, sizeof(line), altitude_file))
 	{

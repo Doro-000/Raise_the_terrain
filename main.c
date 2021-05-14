@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
 	int **altitude = NULL;
 	float ***grid = NULL;
 	FILE *altitude_file = NULL;
-	
+
 	if (argc != 2)
 	{
 		fprintf(stderr, "USAGE: ./terrain <file>\n");
@@ -29,7 +29,8 @@ int main(int argc, char *argv[])
 		fprintf(stderr, "SDL Error: %s\n", SDL_GetError());
 		exit(EXIT_FAILURE);
 	}
-	my_window = SDL_CreateWindow("Isometric Grid", 50, 50, SCREEN_WIDTH, SCREEN_HEIGHT, 0); /*Create window*/
+	/*Create Window*/
+	my_window = SDL_CreateWindow("Iso", 50, 50, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
 	if (my_window == NULL)
 	{
 		fprintf(stderr, "SDL Error: %s\n", SDL_GetError());
@@ -41,7 +42,7 @@ int main(int argc, char *argv[])
 	grid = get_grid(origin); /*setup grid*/
 	altitude = get_altitude(altitude_file);
 	fclose(altitude_file);
-	ToIso(grid, altitude);	
+	ToIso(grid, altitude);
 	while (!EXIT)
 	{
 		SDL_SetRenderDrawColor(my_renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
