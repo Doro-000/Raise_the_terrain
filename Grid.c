@@ -86,5 +86,31 @@ int **get_altitude(FILE *altitude_file)
 		}
 		i++;
 	}
+	fclose(altitude_file);
 	return (grid);
+}
+
+/**
+ * apply_rotation - applies rotation to given points
+ * @my_grid: gird to be used
+ * @angle: angle to be used
+ *
+ * Return: void
+ */
+void apply_rotation(float ***my_grid, double angle)
+{
+	float *temp;
+	double radians;
+	int i, j;
+
+	for (i = 0; i <= GRID_SIZE; i++)
+	{
+		for (j = 0; j <= GRID_SIZE; j++)
+		{
+			temp = my_grid[i][j];
+			radians = (angle * M_PI) / 180;
+			my_grid[i][j][0] = temp[0] * cos(radians) - temp[1] * sin(radians);
+			my_grid[i][j][1] = temp[0] * sin(radians) + temp[1] * cos(radians);
+		}
+	}
 }
